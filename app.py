@@ -7,13 +7,12 @@ import uuid
 import datetime
 import io
 import platform
+import json
 
 # App setup
 st.set_page_config(page_title="CleanUpBristol v1.3.3", layout="centered")
 st.title("📸 CleanUpBristol — v1.3.3")
 st.write("Upload a street image with optional location to help identify urban waste.")
-
-import json
 
 # 🔐 Load and parse service account credentials
 creds_dict = json.loads(st.secrets["gcp"]["credentials"])
