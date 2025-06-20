@@ -14,11 +14,11 @@ firebase_key_path = st.secrets["firebase"]["credentials"]
 
 # 🧠 Initialize Firebase Admin
 if not firebase_admin._apps:
-    import json
-cred_dict = json.loads(st.secrets["firebase"]["credentials"])
-cred = credentials.Certificate(cred_dict)
-    firebase_admin.initialize_app(cred)
-db = firestore.client()
+import json
+if not firebase_admin._apps:
+    cred_dict = json.loads(st.secrets["firebase"]["credentials"])
+    cred = credentials.Certificate(cred_dict)
+firebase_admin.initialize_app(cred)db = firestore.client()
 
 # 🌐 App UI
 st.set_page_config(page_title="CleanUpBristol", layout="centered")
