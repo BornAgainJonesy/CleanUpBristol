@@ -13,11 +13,18 @@ st.write("Upload a street image with optional location to help identify urban wa
 # Upload UI
 uploaded_file = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png"])
 
-# Manual location input
-st.subheader("📍 Enter Location (Optional)")
-latitude = st.text_input("Latitude", placeholder="51.4545")
-longitude = st.text_input("Longitude", placeholder="-2.5879")
+from streamlit_geolocation import st_geolocation
 
+st.subheader("📍 Your Location (Optional)")
+location = st_geolocation()
+
+if location:
+    latitude = location["latitude"]
+    longitude = location["longitude"]
+else:
+    latitude = None
+    longitude = None
+    
 if uploaded_file:
     st.image(uploaded_file, caption="Preview", use_column_width=True)
 
