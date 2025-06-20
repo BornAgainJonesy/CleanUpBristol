@@ -13,8 +13,10 @@ st.set_page_config(page_title="CleanUpBristol v1.3.3", layout="centered")
 st.title("📸 CleanUpBristol — v1.3.3")
 st.write("Upload a street image with optional location to help identify urban waste.")
 
-# 🔐 Load service account credentials
-creds_dict = st.secrets["gcp"]["credentials"]
+import json
+
+# 🔐 Load and parse service account credentials
+creds_dict = json.loads(st.secrets["gcp"]["credentials"])
 creds = service_account.Credentials.from_service_account_info(creds_dict)
 
 # 📍 Get user location
