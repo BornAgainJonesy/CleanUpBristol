@@ -7,13 +7,17 @@ import uuid
 from datetime import datetime
 import io
 import os
+import json  # ✅ This stays with other imports
 
-# 🔐 Load secrets
-bucket_name = st.secrets["gcp"]["bucket"]
-firebase_key_path = st.secrets["firebase"]["credentials"]
-
-# 🧠 Initialize Firebase Admin
+# 🔐 Setup Firebase Admin
 if not firebase_admin._apps:
+    cred_dict = json.loads(st.secrets["firebase"]["credentials"])
+    cred = credentials.Certificate(cred_dict)
+    firebase_admin.initialize_app(cred)
+
+# 🔥 Init Firestore client
+db = firestore.client()
+
 import json
 
 if not firebase_admin._apps:
