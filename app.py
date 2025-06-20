@@ -18,7 +18,7 @@ import json
 if not firebase_admin._apps:
     cred_dict = json.loads(st.secrets["firebase"]["credentials"])
     cred = credentials.Certificate(cred_dict)
-firebase_admin.initialize_app(cred)db = firestore.client()
+    firebase_admin.initialize_app(cred)db = firestore.client()
 
 # 🌐 App UI
 st.set_page_config(page_title="CleanUpBristol", layout="centered")
