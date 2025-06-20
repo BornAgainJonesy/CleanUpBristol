@@ -1,19 +1,23 @@
 import streamlit as st
 from google.cloud import storage, vision, firestore
-from streamlit_js_eval import get_geolocation
 from google.oauth2 import service_account
+from streamlit_js_eval import get_geolocation
 from PIL import Image
 import uuid
 import datetime
 import io
 import platform
 
-# App metadata
-st.set_page_config(page_title="CleanUpBristol v1.3.1", layout="centered")
-st.title("📸 CleanUpBristol — v1.3.1")
+# App setup
+st.set_page_config(page_title="CleanUpBristol v1.3.3", layout="centered")
+st.title("📸 CleanUpBristol — v1.3.3")
 st.write("Upload a street image with optional location to help identify urban waste.")
 
-# 🔍 Attempt to auto-detect location
+# 🔐 Load service account credentials
+creds_dict = st.secrets["gcp"]["credentials"]
+creds = service_account.Credentials.from_service_account_info(creds_dict)
+
+# 📍 Get user location
 st.subheader("📍 Auto-Detect Your Location (Optional)")
 loc = get_geolocation()
 
@@ -27,7 +31,6 @@ if loc and loc.get("coords"):
     if latitude and longitude:
         st.success(f"📍 Detected location: {latitude:.5f}, {longitude:.5f}")
 else:
-    # 🧭 Fallback to manual input
     latitude_input = st.text_input("Latitude (optional)")
     longitude_input = st.text_input("Longitude (optional)")
     try:
@@ -46,7 +49,7 @@ if uploaded_file:
         with st.spinner("Uploading to Cloud & Analyzing..."):
 
             try:
-                # Prep image
+                # Prepare image metadata
                 image_bytes = uploaded_file.read()
                 file_type = uploaded_file.type
                 device_info = platform.platform()
@@ -54,25 +57,27 @@ if uploaded_file:
                 filename = f"uploads/{unique_id}.{uploaded_file.name.split('.')[-1]}"
                 timestamp = datetime.datetime.utcnow().isoformat()
 
-                # Load service account credentials from secrets
-                creds_dict = st.secrets["gcp"]["credentials"]
-                creds = service_account.Credentials.from_service_account_info(creds_dict)
-                
                 # Upload to GCS
-                client = storage.Client(project=st.secrets["gcp"]["project"])
+                client = storage.Client(
+                    project=st.secrets["gcp"]["project"],
+                    credentials=creds
+                )
                 bucket = client.bucket(st.secrets["gcp"]["bucket"])
                 blob = bucket.blob(filename)
                 blob.upload_from_string(image_bytes, content_type=file_type)
 
-                # Vision API analysis
-                client = storage.Client(project=st.secrets["gcp"]["project"], credentials=creds)
+                # Analyze with Cloud Vision API
+                vision_client = vision.ImageAnnotatorClient(credentials=creds)
                 image = vision.Image(content=image_bytes)
                 response = vision_client.label_detection(image=image)
                 labels = response.label_annotations
                 top_label = labels[0].description if labels else "Unclassified"
 
                 # Log to Firestore
-                db = firestore.Client(project=st.secrets["gcp"]["project"], credentials=creds)
+                db = firestore.Client(
+                    project=st.secrets["gcp"]["project"],
+                    credentials=creds
+                )
                 doc_ref = db.collection("uploads").document(unique_id)
                 doc_ref.set({
                     "id": unique_id,
