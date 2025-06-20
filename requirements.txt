@@ -1,4 +1,6 @@
 streamlit
+streamlit-geolocation
 google-cloud-storage
-firebase-admin
+google-cloud-vision
+google-cloud-firestore
 Pillow
