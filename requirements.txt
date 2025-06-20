@@ -1,4 +1,5 @@
 streamlit
+streamlit-geolocation
 google-cloud-storage
 google-cloud-vision
 google-cloud-firestore
