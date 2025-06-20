@@ -1,84 +1,62 @@
 import streamlit as st
-from google.cloud import storage
-import firebase_admin
-from firebase_admin import credentials, firestore
+from google.cloud import storage, vision, firestore
+from streamlit_geolocation import geolocation
 from PIL import Image
 import uuid
-from datetime import datetime
+import datetime
 import io
-import os
-import json  # ✅ This stays with other imports
-from streamlit_geolocation import geolocation
+import platform
 
-# Get location
-location = geolocation()
-
-# Show location
-if location:
-    st.write("📍 Location:", location)
-
-# 🔐 Setup Firebase Admin
-if not firebase_admin._apps:
-    cred_dict = json.loads(st.secrets["firebase"]["credentials"])
-    cred = credentials.Certificate(cred_dict)
-    firebase_admin.initialize_app(cred)
-
-# 🔥 Init Firestore client
-db = firestore.client()
-
-import json
-
-if not firebase_admin._apps:
-    cred_dict = json.loads(st.secrets["firebase"]["credentials"])
-    cred = credentials.Certificate(cred_dict)
-    firebase_admin.initialize_app(cred)
-    
-# 🌐 App UI
-st.set_page_config(page_title="CleanUpBristol", layout="centered")
-st.title("📸 Upload a Street Image")
-st.write("Upload an image of a dirty street and help us clean up Bristol!")
+st.set_page_config(page_title="CleanUpBristol v1.3", layout="centered")
+st.title("📸 CleanUpBristol — v1.3 (Geo + ML)")
+st.write("Upload a street image to help detect and track urban waste.")
 
 uploaded_file = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png"])
+
+# Get geolocation from browser
+location = geolocation()
 
 if uploaded_file:
     st.image(uploaded_file, caption="Preview", use_column_width=True)
 
-    if st.button("Upload to Cloud"):
-        try:
-            # 📸 Read file
+    if st.button("🚀 Upload & Analyse"):
+        with st.spinner("Uploading to Cloud & Analyzing..."):
+
             image_bytes = uploaded_file.read()
             file_type = uploaded_file.type
-            filename = uploaded_file.name
-
-            # 🧠 Generate metadata
+            device_info = platform.platform()
             unique_id = str(uuid.uuid4())
-            upload_time = datetime.utcnow().isoformat()
-            gcs_path = f"uploads/{unique_id}_{filename}"
+            filename = f"uploads/{unique_id}.{uploaded_file.name.split('.')[-1]}"
+            timestamp = datetime.datetime.utcnow().isoformat()
 
-            # ☁️ Upload to GCS
+            # Upload to GCS
             client = storage.Client()
-            bucket = client.bucket(bucket_name)
-            blob = bucket.blob(gcs_path)
+            bucket = client.bucket(st.secrets["gcp"]["bucket"])
+            blob = bucket.blob(filename)
             blob.upload_from_string(image_bytes, content_type=file_type)
 
-            # 📝 Prepare metadata
-            metadata = {
-                "uuid": unique_id,
-                "upload_time": upload_time,
-                "image_gcs_url": f"gs://{bucket_name}/{gcs_path}",
+            # ML Analysis using Cloud Vision
+            vision_client = vision.ImageAnnotatorClient()
+            image = vision.Image(content=image_bytes)
+            response = vision_client.label_detection(image=image)
+            labels = response.label_annotations
+            top_label = labels[0].description if labels else "Unclassified"
+
+            # Log to Firestore
+            db = firestore.Client()
+            doc_ref = db.collection("uploads").document(unique_id)
+            doc_ref.set({
+                "id": unique_id,
+                "timestamp": timestamp,
                 "file_type": file_type,
-                "device_info": st.session_state.get("user_agent", "unknown"),
-                "location": None,
-                "user_id": None,
-                "labels": [],
-                "status": "uploaded"
-            }
+                "device": device_info,
+                "gcs_path": filename,
+                "status": "uploaded",
+                "ml_label": top_label,
+                "location": {
+                    "lat": location["latitude"] if location else None,
+                    "lng": location["longitude"] if location else None
+                }
+            })
 
-            # 🔥 Write to Firestore
-            db.collection("uploads").document(unique_id).set(metadata)
-
-            st.success("✅ Uploaded and metadata logged!")
-            st.write(f"GCS Path: `{gcs_path}`")
-
-        except Exception as e:
-            st.error(f"⚠️ Upload failed: {e}")
+            st.success(f"✅ Uploaded & analysed as: **{top_label}**")
