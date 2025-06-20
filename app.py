@@ -6,9 +6,18 @@ import datetime
 import io
 import platform
 
-st.set_page_config(page_title="CleanUpBristol v1.3", layout="centered")
-st.title("📸 CleanUpBristol — v1.3")
-st.write("Upload a street image with optional location to help identify urban waste.")
+from streamlit_js_eval import get_geolocation
+
+st.subheader("📍 Auto-Detect Your Location (Optional)")
+loc = get_geolocation()
+
+if loc and loc.get("coords"):
+    latitude = loc["coords"]["latitude"]
+    longitude = loc["coords"]["longitude"]
+    st.success(f"Detected location: {latitude:.5f}, {longitude:.5f}")
+else:
+    latitude = st.text_input("Latitude (if not auto-filled)")
+    longitude = st.text_input("Longitude (if not auto-filled)")
 
 # Upload UI
 uploaded_file = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png"])
