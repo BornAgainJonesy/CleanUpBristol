@@ -6,10 +6,6 @@ import datetime
 import io
 import platform
 
-from streamlit_js_eval import get_geolocation
-
-from streamlit_js_eval import get_geolocation
-
 st.subheader("📍 Auto-Detect Your Location (Optional)")
 loc = get_geolocation()
 
