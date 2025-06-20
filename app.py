@@ -8,6 +8,14 @@ from datetime import datetime
 import io
 import os
 import json  # ✅ This stays with other imports
+from streamlit_geolocation import geolocation
+
+# Get location
+location = geolocation()
+
+# Show location
+if location:
+    st.write("📍 Location:", location)
 
 # 🔐 Setup Firebase Admin
 if not firebase_admin._apps:
