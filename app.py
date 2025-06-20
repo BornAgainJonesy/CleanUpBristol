@@ -8,17 +8,28 @@ import platform
 
 from streamlit_js_eval import get_geolocation
 
+from streamlit_js_eval import get_geolocation
+
 st.subheader("📍 Auto-Detect Your Location (Optional)")
 loc = get_geolocation()
 
-if loc and loc.get("coords"):
-    latitude = loc["coords"]["latitude"]
-    longitude = loc["coords"]["longitude"]
-    st.success(f"Detected location: {latitude:.5f}, {longitude:.5f}")
-else:
-    latitude = st.text_input("Latitude (if not auto-filled)")
-    longitude = st.text_input("Longitude (if not auto-filled)")
+latitude = None
+longitude = None
 
+if loc and loc.get("coords"):
+    coords = loc["coords"]
+    latitude = coords.get("latitude")
+    longitude = coords.get("longitude")
+    if latitude is not None and longitude is not None:
+        st.success(f"Detected location: {latitude:.5f}, {longitude:.5f}")
+else:
+    latitude_input = st.text_input("Latitude (if not auto-filled)")
+    longitude_input = st.text_input("Longitude (if not auto-filled)")
+    try:
+        latitude = float(latitude_input) if latitude_input else None
+        longitude = float(longitude_input) if longitude_input else None
+    except ValueError:
+        st.warning("Please enter valid latitude and longitude numbers.")
 # Upload UI
 uploaded_file = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png"])
 
