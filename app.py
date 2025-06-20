@@ -1,6 +1,7 @@
 import streamlit as st
 from google.cloud import storage, vision, firestore
 from streamlit_geolocation import geolocation
+location = geolocation()
 from PIL import Image
 import uuid
 import datetime
