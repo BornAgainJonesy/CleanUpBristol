@@ -1,8 +1,5 @@
 import streamlit as st
 from google.cloud import storage, vision, firestore
-import streamlit_geolocation
-
-location = streamlit_geolocation.geolocation()
 from PIL import Image
 import uuid
 import datetime
@@ -10,13 +7,16 @@ import io
 import platform
 
 st.set_page_config(page_title="CleanUpBristol v1.3", layout="centered")
-st.title("📸 CleanUpBristol — v1.3 (Geo + ML)")
-st.write("Upload a street image to help detect and track urban waste.")
+st.title("📸 CleanUpBristol — v1.3")
+st.write("Upload a street image with optional location to help identify urban waste.")
 
+# Upload UI
 uploaded_file = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png"])
 
-# Get geolocation from browser
-location = geolocation()
+# Manual location input
+st.subheader("📍 Enter Location (Optional)")
+latitude = st.text_input("Latitude", placeholder="51.4545")
+longitude = st.text_input("Longitude", placeholder="-2.5879")
 
 if uploaded_file:
     st.image(uploaded_file, caption="Preview", use_column_width=True)
@@ -24,6 +24,7 @@ if uploaded_file:
     if st.button("🚀 Upload & Analyse"):
         with st.spinner("Uploading to Cloud & Analyzing..."):
 
+            # Prep image data
             image_bytes = uploaded_file.read()
             file_type = uploaded_file.type
             device_info = platform.platform()
@@ -44,7 +45,7 @@ if uploaded_file:
             labels = response.label_annotations
             top_label = labels[0].description if labels else "Unclassified"
 
-            # Log to Firestore
+            # Firestore Logging
             db = firestore.Client()
             doc_ref = db.collection("uploads").document(unique_id)
             doc_ref.set({
@@ -56,8 +57,8 @@ if uploaded_file:
                 "status": "uploaded",
                 "ml_label": top_label,
                 "location": {
-                    "lat": location["latitude"] if location else None,
-                    "lng": location["longitude"] if location else None
+                    "lat": float(latitude) if latitude else None,
+                    "lng": float(longitude) if longitude else None
                 }
             })
 
