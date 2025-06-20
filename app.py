@@ -14,7 +14,9 @@ firebase_key_path = st.secrets["firebase"]["credentials"]
 
 # 🧠 Initialize Firebase Admin
 if not firebase_admin._apps:
-    cred = credentials.Certificate(firebase_key_path)
+    import json
+cred_dict = json.loads(st.secrets["firebase"]["credentials"])
+cred = credentials.Certificate(cred_dict)
     firebase_admin.initialize_app(cred)
 db = firestore.client()
 
