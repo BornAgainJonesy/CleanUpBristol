@@ -1,6 +1,7 @@
 import streamlit as st
 from google.cloud import storage, vision, firestore
 from streamlit_js_eval import get_geolocation
+from google.oauth2 import service_account
 from PIL import Image
 import uuid
 import datetime
@@ -53,6 +54,10 @@ if uploaded_file:
                 filename = f"uploads/{unique_id}.{uploaded_file.name.split('.')[-1]}"
                 timestamp = datetime.datetime.utcnow().isoformat()
 
+                # Load service account credentials from secrets
+                creds_dict = st.secrets["gcp"]["credentials"]
+                creds = service_account.Credentials.from_service_account_info(creds_dict)
+                
                 # Upload to GCS
                 client = storage.Client(project=st.secrets["gcp"]["project"])
                 bucket = client.bucket(st.secrets["gcp"]["bucket"])
@@ -60,14 +65,14 @@ if uploaded_file:
                 blob.upload_from_string(image_bytes, content_type=file_type)
 
                 # Vision API analysis
-                vision_client = vision.ImageAnnotatorClient()
+                client = storage.Client(project=st.secrets["gcp"]["project"], credentials=creds)
                 image = vision.Image(content=image_bytes)
                 response = vision_client.label_detection(image=image)
                 labels = response.label_annotations
                 top_label = labels[0].description if labels else "Unclassified"
 
                 # Log to Firestore
-                db = firestore.Client(project=st.secrets["gcp"]["project"])
+                db = firestore.Client(project=st.secrets["gcp"]["project"], credentials=creds)
                 doc_ref = db.collection("uploads").document(unique_id)
                 doc_ref.set({
                     "id": unique_id,
