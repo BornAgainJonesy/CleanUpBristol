@@ -1,15 +1,13 @@
+import streamlit as st
 import os
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = st.secrets["GOOGLE_APPLICATION_CREDENTIALS"]
-import streamlit as st
+
 from google.cloud import storage, vision, firestore
-from google.oauth2 import service_account
 from streamlit_js_eval import get_geolocation
 from PIL import Image
 import uuid
 import datetime
-import io
 import platform
-import json
 
 # App setup
 st.set_page_config(page_title="CleanUpBristol v1.3.3", layout="centered")
@@ -61,9 +59,9 @@ if uploaded_file:
                 timestamp = datetime.datetime.utcnow().isoformat()
 
                 # Upload to GCS
-                client = storage.Client(
-                    project=st.secrets["gcp"]["project"],
-                    credentials=creds
+               client = storage.Client()
+                vision_client = vision.ImageAnnotatorClient()
+                db = firestore.Client()    
                 )
                 bucket = client.bucket(st.secrets["gcp"]["bucket"])
                 blob = bucket.blob(filename)
