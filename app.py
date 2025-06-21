@@ -45,10 +45,9 @@ uploaded_file = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png"])
 
 if uploaded_file:
     st.image(uploaded_file, caption="Preview", use_column_width=True)
-
+        
     if st.button("🚀 Upload & Analyse"):
         with st.spinner("Uploading to Cloud & Analyzing..."):
-
             try:
                 # Prepare image metadata
                 image_bytes = uploaded_file.read()
@@ -59,26 +58,20 @@ if uploaded_file:
                 timestamp = datetime.datetime.utcnow().isoformat()
 
                 # Upload to GCS
-               client = storage.Client()
-                vision_client = vision.ImageAnnotatorClient()
-                db = firestore.Client()    
-                )
+                client = storage.Client()
                 bucket = client.bucket(st.secrets["gcp"]["bucket"])
                 blob = bucket.blob(filename)
                 blob.upload_from_string(image_bytes, content_type=file_type)
 
                 # Analyze with Cloud Vision API
-                vision_client = vision.ImageAnnotatorClient(credentials=creds)
+                vision_client = vision.ImageAnnotatorClient()
                 image = vision.Image(content=image_bytes)
                 response = vision_client.label_detection(image=image)
                 labels = response.label_annotations
                 top_label = labels[0].description if labels else "Unclassified"
 
                 # Log to Firestore
-                db = firestore.Client(
-                    project=st.secrets["gcp"]["project"],
-                    credentials=creds
-                )
+                db = firestore.Client()
                 doc_ref = db.collection("uploads").document(unique_id)
                 doc_ref.set({
                     "id": unique_id,
@@ -95,5 +88,6 @@ if uploaded_file:
                 })
 
                 st.success(f"✅ Uploaded & analysed as: **{top_label}**")
+
             except Exception as e:
                 st.error(f"❌ Something went wrong: {e}")
