@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = st.secrets["GOOGLE_APPLICATION_CREDENTIALS"]
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = st.secrets["gcp"]["GOOGLE_APPLICATION_CREDENTIALS"]
 from google.cloud import storage, vision, firestore
 from streamlit_js_eval import get_geolocation
 from PIL import Image
