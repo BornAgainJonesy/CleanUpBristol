@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import json
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = st.secrets["gcp"]["GOOGLE_APPLICATION_CREDENTIALS"]
 from google.cloud import storage, vision, firestore
 from streamlit_js_eval import get_geolocation
@@ -8,14 +9,18 @@ import uuid
 import datetime
 import platform
 
+# ✅ Initialise GCP clients
+client = storage.Client()
+vision_client = vision.ImageAnnotatorClient()
+db = firestore.Client()
+
 # App setup
 st.set_page_config(page_title="CleanUpBristol v1.3.3", layout="centered")
 st.title("📸 CleanUpBristol — v1.3.3")
 st.write("Upload a street image with optional location to help identify urban waste.")
 
-# 🔐 Load and parse service account credentials
-creds_dict = json.loads(st.secrets["gcp"]["credentials"])
-creds = service_account.Credentials.from_service_account_info(creds_dict)
+import os
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = ".streamlit/clean-streets-ai-133b20d740fe.json"
 
 # 📍 Get user location
 st.subheader("📍 Auto-Detect Your Location (Optional)")
