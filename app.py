@@ -1,3 +1,5 @@
+import os
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = st.secrets["GOOGLE_APPLICATION_CREDENTIALS"]
 import streamlit as st
 from google.cloud import storage, vision, firestore
 from google.oauth2 import service_account
