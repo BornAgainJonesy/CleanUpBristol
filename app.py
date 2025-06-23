@@ -4,6 +4,11 @@ from PIL import Image
 import uuid
 import datetime
 import platform
+import json
+from google.oauth2 import service_account
+
+creds_dict = json.loads(st.secrets["gcp"]["credentials"])
+creds = service_account.Credentials.from_service_account_info(creds_dict)
 
 # App setup
 st.set_page_config(page_title="CleanUpBristol v1.2", layout="centered")
