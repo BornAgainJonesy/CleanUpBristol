@@ -28,7 +28,7 @@ if uploaded_file:
                 timestamp = datetime.datetime.utcnow().isoformat()
 
                 # Upload to GCS
-                client = storage.Client()
+                client = storage.Client(project=st.secrets["gcp"]["project"])
                 bucket = client.bucket(st.secrets["gcp"]["bucket"])
                 blob = bucket.blob(filename)
                 blob.upload_from_string(image_bytes, content_type=file_type)
