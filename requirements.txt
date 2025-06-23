@@ -1,6 +1,3 @@
 streamlit
 google-cloud-storage
-google-cloud-vision
-google-cloud-firestore
 Pillow
-streamlit-js-eval
